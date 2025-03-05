@@ -1,0 +1,100 @@
+openapi: 3.0.0
+info:
+  title: UrBlog API
+  description: API para publicar tweets, seguir a otros usuarios y obtener un timeline de tweets de los usuarios seguidos.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /tweets:
+    post:
+      summary: Publicar un tweet
+      requestBody:
+        description: Datos necesarios para publicar un tweet
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                content:
+                  type: string
+                  maxLength: 280
+      responses:
+        '201':
+          description: Tweet publicado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  user_id:
+                    type: string
+                  content:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+  /follow:
+    post:
+      summary: Seguir a otro usuario
+      requestBody:
+        description: Datos necesarios para seguir a otro usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                follower_id:
+                  type: string
+                followee_id:
+                  type: string
+      responses:
+        '204':
+          description: Usuario seguido exitosamente
+  /timeline:
+    get:
+      summary: Obtener el timeline de tweets
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: string
+          required: true
+          description: ID del usuario
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Número de tweets a obtener
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          required: false
+          description: Desplazamiento para paginación
+      responses:
+        '200':
+          description: Lista de tweets obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    user_id:
+                      type: string
+                    content:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
