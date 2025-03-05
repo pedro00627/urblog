@@ -3,6 +3,7 @@ package interfaces
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,7 +43,12 @@ func TestFollowUser(t *testing.T) {
 	userController.FollowUser(w, req)
 
 	resp := w.Result()
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
@@ -67,7 +73,12 @@ func TestGetTimeline(t *testing.T) {
 	userController.GetTimeline(w, req)
 
 	resp := w.Result()
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			
+		}
+	}(resp.Body)
 
 	var timeline []struct {
 		ID        string `json:"id"`
@@ -75,6 +86,7 @@ func TestGetTimeline(t *testing.T) {
 		Content   string `json:"content"`
 		Timestamp string `json:"timestamp"`
 	}
+_:
 	json.NewDecoder(resp.Body).Decode(&timeline)
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

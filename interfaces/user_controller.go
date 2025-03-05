@@ -73,6 +73,7 @@ func (c *UserController) GetTimeline(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
+_:
 	json.NewEncoder(w).Encode(resp)
 }
 
@@ -90,5 +91,6 @@ func (c *UserController) LoadUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+_:
 	json.NewEncoder(w).Encode(users)
 }

@@ -21,6 +21,7 @@ func TestFollowUser(t *testing.T) {
 	followUserUseCase := NewFollowUserUseCase(userRepo, kafkaWriter)
 
 	user := domain.NewUser("user1", "user1")
+_:
 	userRepo.Save(user)
 
 	err := followUserUseCase.Execute("user1", "user2")
