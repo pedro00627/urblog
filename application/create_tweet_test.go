@@ -4,34 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pedro00627/urblog/domain"
+	"github.com/pedro00627/urblog/infrastructure/repositories/mocks"
 	"github.com/stretchr/testify/assert"
 )
-
-type MockTweetRepository struct {
-	tweets map[string]*domain.Tweet
-}
-
-func NewMockTweetRepository() *MockTweetRepository {
-	return &MockTweetRepository{
-		tweets: make(map[string]*domain.Tweet),
-	}
-}
-
-func (r *MockTweetRepository) Save(tweet *domain.Tweet) error {
-	r.tweets[tweet.ID] = tweet
-	return nil
-}
-
-func (r *MockTweetRepository) FindByUserID(userID string, limit, offset int) ([]*domain.Tweet, error) {
-	var result []*domain.Tweet
-	for _, tweet := range r.tweets {
-		if tweet.UserID == userID {
-			result = append(result, tweet)
-		}
-	}
-	return result, nil
-}
 
 type MockKafkaWriter struct{}
 
@@ -40,8 +17,14 @@ func (kw *MockKafkaWriter) WriteMessage(message []byte) error {
 }
 
 func TestCreateTweet(t *testing.T) {
-	tweetRepo := NewMockTweetRepository()
-	userRepo := NewMockUserRepository()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	userRepo := mocks.NewMockUserRepository(ctrl)
+	tweetRepo := mocks.NewMockTweetRepository(ctrl)
+
+	userRepo.EXPECT().FindByID("user1").Return(domain.NewUser("user1", "User 1"), nil).Times(1)
+	tweetRepo.EXPECT().Save(gomock.Any()).Times(1)
+
 	kafkaWriter := &MockKafkaWriter{}
 	createTweetUseCase := NewCreateTweetUseCase(tweetRepo, userRepo, kafkaWriter)
 	user1 := domain.NewUser("user1", "User 1")

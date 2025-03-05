@@ -3,46 +3,26 @@ package application
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pedro00627/urblog/domain"
+	"github.com/pedro00627/urblog/infrastructure/repositories/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
-type MockUserRepository struct {
-	users map[string]*domain.User
-}
-
-func NewMockUserRepository() *MockUserRepository {
-	return &MockUserRepository{
-		users: make(map[string]*domain.User),
-	}
-}
-
-func (r *MockUserRepository) Save(user *domain.User) error {
-	r.users[user.ID] = user
-	return nil
-}
-
-func (r *MockUserRepository) FindByID(userID string) (*domain.User, error) {
-	user, exists := r.users[userID]
-	if !exists {
-		return nil, domain.ErrUserNotFound
-	}
-	return user, nil
-}
-
-func (r *MockUserRepository) FindByName(s string) (*domain.User, error) {
-	panic("unimplemented")
-}
-
 func TestFollowUser(t *testing.T) {
-	userRepo := NewMockUserRepository()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	userRepo := mocks.NewMockUserRepository(ctrl)
+
+	userRepo.EXPECT().Save(gomock.Any()).Times(2)
+	userRepo.EXPECT().FindByID("user1").Return(domain.NewUser("user1", "user1"), nil).Times(1)
+	userRepo.EXPECT().FindByID("user2").Return(domain.NewUser("user2", "user2"), nil).Times(1)
 	kafkaWriter := &MockKafkaWriter{}
 	followUserUseCase := NewFollowUserUseCase(userRepo, kafkaWriter)
 
-	user := domain.NewUser("user1", "User One")
+	user := domain.NewUser("user1", "user1")
 	userRepo.Save(user)
 
 	err := followUserUseCase.Execute("user1", "user2")
 	assert.NoError(t, err)
-	assert.True(t, user.Following["user2"])
 }

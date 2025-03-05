@@ -26,7 +26,12 @@ func (uc *followUserUseCase) Execute(followerID, followeeID string) error {
 	if err != nil {
 		return err
 	}
-	err = follower.Follow(followeeID)
+	// find followee
+	followee, err := uc.userRepo.FindByID(followeeID)
+	if err != nil {
+		return err
+	}
+	err = follower.Follow(followee.ID)
 	if err != nil {
 		return err
 	}

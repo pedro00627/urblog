@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/pedro00627/urblog/domain"
 	"github.com/pedro00627/urblog/infrastructure/repositories"
 )
@@ -41,7 +40,7 @@ func (uc *LoadUsersUseCase) Execute(filePath string) ([]domain.User, error) {
 			return nil, err
 		}
 
-		user := domain.NewUser(uuid.New().String(), parts[0])
+		user := domain.NewUser(parts[0], parts[0])
 		// Agregar usuarios seguidos
 		for _, following := range parts[1:] {
 			user.Following[following] = true

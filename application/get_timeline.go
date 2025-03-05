@@ -1,6 +1,7 @@
 package application
 
 import (
+	"log"
 	"sort"
 
 	"github.com/pedro00627/urblog/domain"
@@ -34,6 +35,7 @@ func (uc *getTimelineUseCase) Execute(userID string, limit, offset int) ([]*doma
 		// get user name
 		followedUserId, err := uc.userRepo.FindByName(followedUserID)
 		if err != nil {
+			log.Printf("Error finding user by name: %s", followedUserID)
 			continue
 		}
 

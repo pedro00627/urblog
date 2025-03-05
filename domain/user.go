@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrInvalidTweetContent = errors.New("invalid tweet content")
 	ErrInvalidFollowAction = errors.New("invalid follow action")
+	ErrAlreadyFollowing    = errors.New("already following")
 	ErrUserNotFound        = errors.New("user not found")
 )
 
@@ -27,7 +28,7 @@ func (u *User) Follow(userID string) error {
 		return ErrInvalidFollowAction
 	}
 	if _, exists := u.Following[userID]; exists {
-		return ErrInvalidFollowAction
+		return ErrAlreadyFollowing
 	}
 	u.Following[userID] = true
 	return nil

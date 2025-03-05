@@ -4,30 +4,51 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pedro00627/urblog/domain"
+	"github.com/pedro00627/urblog/infrastructure/repositories/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetTimeline(t *testing.T) {
-	tweetRepo := NewMockTweetRepository()
-	userRepo := NewMockUserRepository()
-	getTimelineUseCase := NewGetTimelineUseCase(tweetRepo, userRepo)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	user1 := domain.NewUser("user1", "User One")
-	user2 := domain.NewUser("user2", "User Two")
-	user1.Follow("user2")
-	userRepo.Save(user1)
-	userRepo.Save(user2)
+	mockTweetRepo := mocks.NewMockTweetRepository(ctrl)
+	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 
-	tweetRepo.Save(&domain.Tweet{
+	userID := "user1"
+	followedUserID := "user2"
+	tweet1 := &domain.Tweet{
 		ID:        "tweet1",
-		UserID:    "user2",
-		Content:   "Tweet from user2",
-		Timestamp: time.Now(),
-	})
+		UserID:    followedUserID,
+		Content:   "Hello, world!",
+		Timestamp: time.Now().Add(-1 * time.Hour),
+	}
+	tweet2 := &domain.Tweet{
+		ID:        "tweet2",
+		UserID:    followedUserID,
+		Content:   "Another tweet",
+		Timestamp: time.Now().Add(-2 * time.Hour),
+	}
 
-	timeline, err := getTimelineUseCase.Execute("user1", 10, 0)
+	user := &domain.User{
+		ID:       userID,
+		Username: "user1",
+		Following: map[string]bool{
+			followedUserID: true,
+		},
+	}
+
+	mockUserRepo.EXPECT().FindByID(userID).Return(user, nil)
+	mockUserRepo.EXPECT().FindByName(followedUserID).Return(&domain.User{ID: followedUserID}, nil)
+	mockTweetRepo.EXPECT().FindByUserID(followedUserID, 10, 0).Return([]*domain.Tweet{tweet1, tweet2}, nil)
+
+	useCase := NewGetTimelineUseCase(mockTweetRepo, mockUserRepo)
+	tweets, err := useCase.Execute(userID, 10, 0)
+
 	assert.NoError(t, err)
-	assert.Len(t, timeline, 1)
-	assert.Equal(t, "Tweet from user2", timeline[0].Content)
+	assert.Len(t, tweets, 2)
+	assert.Equal(t, tweet1.ID, tweets[0].ID)
+	assert.Equal(t, tweet2.ID, tweets[1].ID)
 }
