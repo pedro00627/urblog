@@ -8,12 +8,12 @@ import (
 )
 
 type UserController struct {
-	followUserUseCase  application.FollowUserUseCase
-	getTimelineUseCase application.GetTimelineUseCase
-	loadUsersUseCase   *application.LoadUsersUseCase
+	followUserUseCase  application.FollowUser
+	getTimelineUseCase application.GetTimeline
+	loadUsersUseCase   application.LoadUsers
 }
 
-func NewUserController(followUserUseCase application.FollowUserUseCase, getTimelineUseCase application.GetTimelineUseCase, loadUsersUseCase *application.LoadUsersUseCase) *UserController {
+func NewUserController(followUserUseCase application.FollowUser, getTimelineUseCase application.GetTimeline, loadUsersUseCase application.LoadUsers) *UserController {
 	return &UserController{
 		followUserUseCase:  followUserUseCase,
 		getTimelineUseCase: getTimelineUseCase,

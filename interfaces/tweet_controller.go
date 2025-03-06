@@ -8,15 +8,24 @@ import (
 )
 
 type TweetController struct {
-	createTweetUseCase *application.CreateTweetUseCase
+	createTweet application.CreateTweet
 }
 
-func NewTweetController(createTweetUseCase *application.CreateTweetUseCase) *TweetController {
+func NewTweetController(createTweet application.CreateTweet) *TweetController {
 	return &TweetController{
-		createTweetUseCase: createTweetUseCase,
+		createTweet: createTweet,
 	}
 }
 
+// @Summary Create a new tweet
+// @Description Create a new tweet with the given content
+// @Tags tweets
+// @Accept  json
+// @Produce  json
+// @Param   tweet  body  Tweet  true  "Tweet content"
+// @Success 200 {object} Tweet
+// @Failure 400 {object} ErrorResponse
+// @Router /tweets [post]
 func (c *TweetController) CreateTweet(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		UserID  string `json:"user_id"`
@@ -26,7 +35,7 @@ func (c *TweetController) CreateTweet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	tweet, err := c.createTweetUseCase.Execute(req.UserID, req.Content)
+	tweet, err := c.createTweet.Execute(req.UserID, req.Content)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

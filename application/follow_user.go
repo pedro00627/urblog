@@ -2,26 +2,27 @@ package application
 
 import (
 	"github.com/pedro00627/urblog/infrastructure"
-	"github.com/pedro00627/urblog/infrastructure/repositories"
+	"github.com/pedro00627/urblog/infrastructure/db"
 )
 
-type FollowUserUseCase interface {
+//go:generate mockgen -destination=./mocks/mock_follow_user.go -package=mocks github.com/pedro00627/urblog/application FollowUser
+type FollowUser interface {
 	Execute(followerID, followeeID string) error
 }
 
-type followUserUseCase struct {
-	userRepo repositories.UserRepository
+type FollowUserUseCase struct {
+	userRepo db.UserRepository
 	queue    infrastructure.Queue
 }
 
-func NewFollowUserUseCase(userRepo repositories.UserRepository, queue infrastructure.Queue) FollowUserUseCase {
-	return &followUserUseCase{
+func NewFollowUserUseCase(userRepo db.UserRepository, queue infrastructure.Queue) FollowUser {
+	return &FollowUserUseCase{
 		userRepo: userRepo,
 		queue:    queue,
 	}
 }
 
-func (uc *followUserUseCase) Execute(followerID, followeeID string) error {
+func (uc *FollowUserUseCase) Execute(followerID, followeeID string) error {
 	follower, err := uc.userRepo.FindByID(followerID)
 	if err != nil {
 		return err

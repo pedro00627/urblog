@@ -1,7 +1,8 @@
-package repositories
+package mongo
 
 import (
 	"context"
+	"errors"
 
 	"github.com/pedro00627/urblog/domain"
 	"go.mongodb.org/mongo-driver/bson"
@@ -9,17 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type MongoUserRepository struct {
+type UserRepository struct {
 	collection *mongo.Collection
 }
 
-func NewMongoUserRepository(db *mongo.Database) *MongoUserRepository {
-	return &MongoUserRepository{
+func NewUserRepository(db *mongo.Database) *UserRepository {
+	return &UserRepository{
 		collection: db.Collection("users"),
 	}
 }
 
-func (r *MongoUserRepository) Save(user *domain.User) error {
+func (r *UserRepository) Save(user *domain.User) error {
 	_, err := r.collection.UpdateOne(
 		context.TODO(),
 		bson.M{"id": user.ID},
@@ -29,21 +30,21 @@ func (r *MongoUserRepository) Save(user *domain.User) error {
 	return err
 }
 
-func (r *MongoUserRepository) FindByID(userID string) (*domain.User, error) {
+func (r *UserRepository) FindByID(userID string) (*domain.User, error) {
 	filter := bson.M{"id": userID}
 	var user domain.User
 	err := r.collection.FindOne(context.TODO(), filter).Decode(&user)
-	if err == mongo.ErrNoDocuments {
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, domain.ErrUserNotFound
 	}
 	return &user, err
 }
 
-func (r *MongoUserRepository) FindByName(s string) (*domain.User, error) {
+func (r *UserRepository) FindByName(s string) (*domain.User, error) {
 	filter := bson.M{"username": s}
 	var user domain.User
 	err := r.collection.FindOne(context.TODO(), filter).Decode(&user)
-	if err == mongo.ErrNoDocuments {
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, domain.ErrUserNotFound
 	}
 	return &user, err

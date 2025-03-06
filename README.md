@@ -23,16 +23,41 @@ UrBlog es una API escrita en Golang 1.24 que aplica la arquitectura hexagonal (P
 ```plaintext
 urblog/
 ├── cmd/
+│   ├── dependencies.go
 │   ├── main.go
-│   ├── server.go
 │   ├── routes.go
-│   └── dependencies.go
+│   └── server.go
 ├── docs/
 │   └── swagger.yaml
 ├── application/
+│   ├── load_users.go
+│   ├── load_users_test.go
+│   ├── post_tweet.go
+│   ├── post_tweet_test.go
+│   ├── follow_user.go
+│   ├── follow_user_test.go
+│   ├── get_timeline.go
+│   └── get_timeline_test.go
 ├── infrastructure/
+│   ├── db/
+│   │   ├── in_memory/
+│   │   │   └── in_memory_user_repository.go
+│   │   └── mongo/
+│   │       └── mongo_user_repository.go
+│   └── queue/
+│       ├── in_memory/
+│       │   └── in_memory_queue.go
+│       └── kafka/
+│           └── kafka_queue.go
 ├── interfaces/
-└── repositories/
+│   ├── user_controller.go
+│   └── user_controller_test.go
+├── domain/
+│   ├── tweet.go
+│   └── user.go
+├── go.mod
+├── go.sum
+└── README.md
 ```
 
 - `cmd/`: Contiene el punto de entrada de la aplicación y la configuración del servidor.
@@ -41,6 +66,7 @@ urblog/
 - `infrastructure/`: Contiene la implementación de la infraestructura, como la conexión a bases de datos y la configuración de Kafka.
 - `interfaces/`: Contiene los controladores que manejan las solicitudes HTTP.
 - `repositories/`: Contiene la implementación de los repositorios para acceder a los datos.
+- `domain/`: Contiene las entidades de dominio y las reglas de negocio.
 
 ## Arquitectura
 
@@ -74,7 +100,31 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    cd urblog
    ```
 
-2. **Eliminar contenedores y volúmenes existentes**
+2. **Verificar que el servicio de Docker está activo**
+
+   #### En Linux (Debian)
+
+   Asegúrate de que el servicio de Docker se esté ejecutando con el siguiente comando:
+
+   ```sh
+   sudo systemctl status docker
+   ```
+
+   Si el servicio no está activo, inicia Docker con:
+
+   ```sh
+   sudo systemctl start docker
+   ```
+
+   #### En macOS
+
+   En macOS, Docker Desktop se debe iniciar desde el Launchpad o desde la carpeta de Aplicaciones. Verifica que Docker esté en ejecución buscando el ícono de Docker en la barra de menú.
+
+   #### En Windows
+
+   En Windows, Docker Desktop se debe iniciar desde el menú Inicio. Verifica que Docker esté en ejecución buscando el ícono de Docker en la bandeja del sistema.
+
+3. **Eliminar contenedores y volúmenes existentes**
 
    Si anteriormente has creado contenedores, puede ser útil eliminarlos para comenzar de nuevo:
 
@@ -82,7 +132,7 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    docker-compose down -v
    ```
 
-3. **Reconstruir y levantar los servicios**
+4. **Reconstruir y levantar los servicios**
 
    Ejecuta el siguiente comando para construir e iniciar los servicios:
 
@@ -90,9 +140,9 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    docker-compose up --build
    ```
 
-4. **Verificar que los contenedores están en ejecución**
+5. **Verificar que los contenedores están en ejecución**
 
-   Ejecuta el siguiente comando para listar los contenedores que se estàn ejecutando:
+   Ejecuta el siguiente comando para listar los contenedores que se están ejecutando:
 
    ```sh
    docker ps
@@ -102,7 +152,7 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
 
    ![alt text](./docs/image.png)
 
-5. **Crear un topic en Kafka**
+6. **Crear un topic en Kafka**
 
    Primero, accede al contenedor de Kafka con una sesión interactiva utilizando el ID del contenedor que obtuviste en el paso anterior:
 
@@ -113,10 +163,10 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    Luego, crea el topic en Kafka utilizando el siguiente comando:
 
    ```sh
-   /usr/bin/kafka-topics --create --topic tweets --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
+   /usr/bin/kafka-topics --create --topic tweets --partitions 1 --replication-factor 1 --if-not-exists --zookeeper zookeeper:2181
    ```
 
-6. **Verificar los topics en Kafka**
+7. **Verificar los topics en Kafka**
 
    Lista los topics en Kafka para asegurarte de que el topic se ha creado correctamente:
 
@@ -125,6 +175,10 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    ```
 
    Esto te mostrará todos los topics que existen actualmente en el broker.
+
+### Nota sobre las Variables de Entorno
+
+Si las variables de entorno `DATABASE` y `KAFKA_BROKER` en el archivo `docker-compose.yml` están vacías, la aplicación utilizará servicios en memoria. Esto es útil para pruebas y desarrollo local sin necesidad de configurar servicios externos.
 
 ## Testing
 
@@ -215,19 +269,60 @@ curl -X POST http://localhost:8080/load-users?file=docs/users.csv
 ```
 #### Respuesta
 ```json
-{
-  "status": "success"
-}
+[
+   {
+      "ID": "user1",
+      "Username": "user1",
+      "Following": {
+         "user2": true,
+         "user3": true
+      }
+   },
+   {
+      "ID": "user2",
+      "Username": "user2",
+      "Following": {
+         "user1": true
+      }
+   },
+   {
+      "ID": "user3",
+      "Username": "user3",
+      "Following": {
+         "user1": true,
+         "user2": true
+      }
+   },
+   {
+      "ID": "user4",
+      "Username": "user4",
+      "Following": {
+         "user1": true,
+         "user2": true,
+         "user3": true
+      }
+   },
+   {
+      "ID": "user5",
+      "Username": "user5",
+      "Following": {
+         "user4": true
+      }
+   }
+]
 ```
 #### Ejemplo de Archivo CSV
 ```csv
 user1,user2,user3
 user2,user1
 user3,user1,user2
+user4,user1,user2,user3
+user5,user4
 ```
 
-Este archivo CSV cargará tres usuarios (user1, user2, user3) y establecerá las relaciones de seguimiento entre ellos.
+Este archivo CSV cargará cinco usuarios (user1, user2, user3, user4 y user5) y establecerá las relaciones de seguimiento entre ellos.
 
 #### Notas
 Asegúrate de que el archivo CSV esté correctamente formateado.
 El endpoint /load-users espera la ruta del archivo CSV como un parámetro de consulta (file).
+Para la carga de los usuarios, el id del usuario es el mismo que el nombre de usuario (por simplicidad para la gestion de los seguidores).

@@ -1,4 +1,4 @@
-package repositories
+package db
 
 import "github.com/pedro00627/urblog/domain"
 

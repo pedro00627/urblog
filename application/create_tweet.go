@@ -4,16 +4,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/pedro00627/urblog/domain"
 	"github.com/pedro00627/urblog/infrastructure"
-	"github.com/pedro00627/urblog/infrastructure/repositories"
+	"github.com/pedro00627/urblog/infrastructure/db"
 )
 
+//go:generate mockgen -destination=./mocks/mock_create_tweet.go -package=mocks github.com/pedro00627/urblog/application CreateTweet
+type CreateTweet interface {
+	Execute(string, string) (*domain.Tweet, error)
+}
 type CreateTweetUseCase struct {
-	tweetRepo repositories.TweetRepository
-	userRepo  repositories.UserRepository
+	tweetRepo db.TweetRepository
+	userRepo  db.UserRepository
 	queue     infrastructure.Queue
 }
 
-func NewCreateTweetUseCase(tweetRepo repositories.TweetRepository, userRepo repositories.UserRepository, queue infrastructure.Queue) *CreateTweetUseCase {
+func NewCreateTweetUseCase(tweetRepo db.TweetRepository, userRepo db.UserRepository, queue infrastructure.Queue) *CreateTweetUseCase {
 	return &CreateTweetUseCase{
 		userRepo:  userRepo,
 		tweetRepo: tweetRepo,
@@ -22,12 +26,12 @@ func NewCreateTweetUseCase(tweetRepo repositories.TweetRepository, userRepo repo
 }
 
 func (uc *CreateTweetUseCase) Execute(userID, content string) (*domain.Tweet, error) {
-	userExists, err := uc.userRepo.FindByID(userID)
+	user, err := uc.userRepo.FindByID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	if userExists == nil {
+	if user == nil {
 		return nil, domain.ErrUserNotFound
 	}
 

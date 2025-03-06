@@ -1,4 +1,4 @@
-package repositories
+package mongo
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type MongoTweetRepository struct {
+type TweetRepository struct {
 	collection *mongo.Collection
 }
 
-func NewMongoTweetRepository(db *mongo.Database) *MongoTweetRepository {
-	return &MongoTweetRepository{
+func NewTweetRepository(db *mongo.Database) *TweetRepository {
+	return &TweetRepository{
 		collection: db.Collection("tweets"),
 	}
 }
 
-func (r *MongoTweetRepository) Save(tweet *domain.Tweet) error {
+func (r *TweetRepository) Save(tweet *domain.Tweet) error {
 	_, err := r.collection.InsertOne(context.TODO(), tweet)
 	return err
 }
 
-func (r *MongoTweetRepository) FindByUserID(userID string, limit, offset int) ([]*domain.Tweet, error) {
+func (r *TweetRepository) FindByUserID(userID string, limit, offset int) ([]*domain.Tweet, error) {
 	filter := bson.M{"userid": userID}
 	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64(offset))
 
@@ -32,7 +32,12 @@ func (r *MongoTweetRepository) FindByUserID(userID string, limit, offset int) ([
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.TODO())
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		closeErr := cursor.Close(ctx)
+		if closeErr != nil {
+
+		}
+	}(cursor, context.TODO())
 
 	var tweets []*domain.Tweet
 	for cursor.Next(context.TODO()) {

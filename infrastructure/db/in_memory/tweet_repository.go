@@ -1,4 +1,4 @@
-package repositories
+package in_memory
 
 import "github.com/pedro00627/urblog/domain"
 
@@ -20,11 +20,11 @@ func (r *InMemoryTweetRepository) Save(tweet *domain.Tweet) error {
 	return nil
 }
 
-func (repo *InMemoryTweetRepository) FindByUserID(userID string, limit, offset int) ([]*domain.Tweet, error) {
+func (r *InMemoryTweetRepository) FindByUserID(userID string, limit, offset int) ([]*domain.Tweet, error) {
 	var result []*domain.Tweet
 	count := 0
 
-	for _, tweet := range repo.tweets {
+	for _, tweet := range r.tweets {
 		if tweet.UserID == userID {
 			if count >= offset && count < offset+limit {
 				result = append(result, tweet)

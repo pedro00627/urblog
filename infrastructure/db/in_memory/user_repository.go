@@ -1,4 +1,4 @@
-package repositories
+package in_memory
 
 import "github.com/pedro00627/urblog/domain"
 

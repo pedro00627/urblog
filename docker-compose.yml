@@ -22,7 +22,7 @@ services:
       - zookeeper
     networks:
       - kafka-net
-
+    
   mongo:
     image: mongo:8.0.5
     ports:
@@ -42,8 +42,11 @@ services:
     networks:
       - kafka-net
     environment:
+      DATABASE: mongo
       MONGODB_URI: mongodb://mongo:27017/urblog
       KAFKA_BROKER: kafka:9092
+    volumes:
+      - ./docs:/app/docs
 
 networks:
   kafka-net:
