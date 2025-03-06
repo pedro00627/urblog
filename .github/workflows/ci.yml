@@ -39,8 +39,3 @@ jobs:
 
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.out ./...
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.50.1

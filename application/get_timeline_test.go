@@ -20,6 +20,8 @@ func TestGetTimelineUseCase_Execute(t *testing.T) {
 
 	useCase := NewGetTimelineUseCase(mockTweetRepo, mockUserRepo)
 
+	inputDate := time.Date(2025, 3, 4, 0, 0, 0, 0, time.UTC)
+
 	tests := []struct {
 		name       string
 		userID     string
@@ -46,13 +48,13 @@ func TestGetTimelineUseCase_Execute(t *testing.T) {
 					ID:        "tweet1",
 					UserID:    "user2",
 					Content:   "Hello, world!",
-					Timestamp: time.Now().Add(-1 * time.Hour),
+					Timestamp: inputDate.Add(-1 * time.Hour),
 				}
 				tweet2 := &domain.Tweet{
 					ID:        "tweet2",
 					UserID:    "user2",
 					Content:   "Another tweet",
-					Timestamp: time.Now().Add(-2 * time.Hour),
+					Timestamp: inputDate.Add(-2 * time.Hour),
 				}
 
 				mockUserRepo.EXPECT().FindByID("user1").Return(user, nil)
@@ -64,13 +66,13 @@ func TestGetTimelineUseCase_Execute(t *testing.T) {
 					ID:        "tweet1",
 					UserID:    "user2",
 					Content:   "Hello, world!",
-					Timestamp: time.Now().Add(-1 * time.Hour),
+					Timestamp: inputDate.Add(-1 * time.Hour),
 				},
 				{
 					ID:        "tweet2",
 					UserID:    "user2",
 					Content:   "Another tweet",
-					Timestamp: time.Now().Add(-2 * time.Hour),
+					Timestamp: inputDate.Add(-2 * time.Hour),
 				},
 			},
 			wantErr: nil,
@@ -251,6 +253,8 @@ func Test_paginateTweets(t *testing.T) {
 }
 
 func Test_sortTweetsByNewest(t *testing.T) {
+	inputDate := time.Date(2025, 3, 4, 0, 0, 0, 0, time.UTC)
+
 	tests := []struct {
 		name      string
 		allTweets []*domain.Tweet
@@ -259,40 +263,40 @@ func Test_sortTweetsByNewest(t *testing.T) {
 		{
 			name: "sort by newest",
 			allTweets: []*domain.Tweet{
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet3", Timestamp: time.Now()},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
 			},
 			want: []*domain.Tweet{
-				{ID: "tweet3", Timestamp: time.Now()},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
 			},
 		},
 		{
 			name: "already sorted",
 			allTweets: []*domain.Tweet{
-				{ID: "tweet3", Timestamp: time.Now()},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
 			},
 			want: []*domain.Tweet{
-				{ID: "tweet3", Timestamp: time.Now()},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
 			},
 		},
 		{
 			name: "reverse order",
 			allTweets: []*domain.Tweet{
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet3", Timestamp: time.Now()},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
 			},
 			want: []*domain.Tweet{
-				{ID: "tweet3", Timestamp: time.Now()},
-				{ID: "tweet2", Timestamp: time.Now().Add(-1 * time.Hour)},
-				{ID: "tweet1", Timestamp: time.Now().Add(-2 * time.Hour)},
+				{ID: "tweet3", Timestamp: inputDate},
+				{ID: "tweet2", Timestamp: inputDate.Add(-1 * time.Hour)},
+				{ID: "tweet1", Timestamp: inputDate.Add(-2 * time.Hour)},
 			},
 		},
 		{
