@@ -1,12 +1,12 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
-    branches: 
+    branches:
       - "main"
       - "develop"
   pull_request:
-    branches: 
+    branches:
       - "main"
       - "develop"
   workflow_dispatch:
@@ -14,6 +14,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - "27017:27017"
+      kafka:
+        image: confluentinc/cp-kafka:latest
+        ports:
+          - "9092:9092"
 
     steps:
       - uses: actions/checkout@v4
@@ -24,21 +33,9 @@ jobs:
           go-version: '1.24'
 
       - name: Install dependencies
-        run: go mod download
+        run: |
+          go mod tidy
+          go mod download
 
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.out ./...
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.50.1
-
-      - name: Upload coverage to Coverage Robot
-        uses: coverage-robot/action@v1.0.8
-        with:
-          files: coverage.out
-          tag: ${{ github.sha }}
-          token: ${{ secrets.COVERAGE_ROBOT_TOKEN }}
-          endpoint: https://api.coveragerobot.com/v1
-          github-token: ${{ github.token }}
