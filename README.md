@@ -133,12 +133,28 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
    ```
 
 4. **Reconstruir y levantar los servicios**
+   Ejecuta uno de los siguientes comandos según tus necesidades:
 
-   Ejecuta el siguiente comando para construir e iniciar los servicios:
+   Forzar la reconstrucción de los contenedores antes de iniciarlos:
 
    ```sh
    docker-compose up --build
    ```
+   Esto vuelve a construir las imágenes desde el Dockerfile antes de iniciar los servicios, incluso si ya existen imágenes previas.
+   
+   Levantar los servicios reutilizando las imágenes existentes:
+
+   ```sh
+   docker-compose up
+   ```
+   Si las imágenes ya han sido creadas anteriormente, este comando las usará sin volver a construirlas.
+   
+   Levantar los servicios en segundo plano (modo "detached"):
+
+   ```sh
+   docker-compose up -d
+   ```
+   Esto ejecuta los contenedores en segundo plano, permitiéndote seguir usando la terminal sin que el proceso se interrumpa.
 
 5. **Verificar que los contenedores están en ejecución**
 
@@ -152,29 +168,32 @@ Este proyecto utiliza Docker para orquestar un entorno de desarrollo con Kafka, 
 
    ![alt text](./docs/image.png)
 
-6. **Crear un topic en Kafka**
+6. **Verificar los topics en Kafka**
 
-   Primero, accede al contenedor de Kafka con una sesión interactiva utilizando el ID del contenedor que obtuviste en el paso anterior:
-
-   ```sh
-   docker exec -it <kafka-container-id> sh
-   ```
-
-   Luego, crea el topic en Kafka utilizando el siguiente comando:
+   Lista los topics en Kafka para asegurarte de que el topic tweets se ha creado automáticamente correctamente:
 
    ```sh
-   /usr/bin/kafka-topics --create --topic tweets --partitions 1 --replication-factor 1 --if-not-exists --zookeeper zookeeper:2181
-   ```
-
-7. **Verificar los topics en Kafka**
-
-   Lista los topics en Kafka para asegurarte de que el topic se ha creado correctamente:
-
-   ```sh
-   /usr/bin/kafka-topics --list --bootstrap-server localhost:9092
+   docker exec -it urblog-kafka-1 kafka-topics --list --bootstrap-server kafka:9092
    ```
 
    Esto te mostrará todos los topics que existen actualmente en el broker.
+
+   En caso de que el topic tweet no exista, lo puedes crear con ayuda del comando:
+   
+   ```sh
+   docker exec -it urblog-kafka-1 kafka-topics --create --topic tweets --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+
+   ```
+
+7. **Verificar los mensajes recibidos en el tópico**
+
+   Ejecuta el siguiente comando para ver los mensajs que se van posteando en el tópico
+
+   ```sh
+   docker exec -it urblog-kafka-1 kafka-console-producer \
+   --bootstrap-server urblog-kafka-1:9092 \
+   --topic tweets
+   ```
 
 ### Nota sobre las Variables de Entorno
 
@@ -192,7 +211,10 @@ go test ./...
 
 La documentación de la API está disponible en el endpoint `/swagger`.
 
-## Ejemplo de Consumo
+## Ejemplos de Consumo
+
+### Notas
+Antes de que ejecutes la creación de un tweet o seguir a un usuario, asegúrate de que dichos usuarios existan, si no existen puedes modificar el archivo load.csv que se encuentra en la ruta `./app/docs`, para más información consulta la sección `Cargar Usuarios desde un Archivo CSV`
 
 ### Publicar un Tweet
 
@@ -262,10 +284,20 @@ curl -X GET http://localhost:8080/timeline -H "Content-Type: application/json" -
 #### Descripción
 Este endpoint permite cargar usuarios desde un archivo CSV. Cada línea del archivo debe contener el nombre de usuario seguido de los nombres de usuario que sigue, separados por comas.
 
-#### Formato del Archivo CSV
+#### Ejemplo del Archivo CSV
+La primera columna hace referencia al usuario que se va a crear y las siguientes a los usuarios que va a seguir.
+
+```csv
+user1,user2,user3
+user2,user1
+user3,user1,user2
+user4,user1,user2,user3
+user5,user4
+```
+
 #### Petición
 ```sh
-curl -X POST http://localhost:8080/load-users?file=docs/users.csv
+curl --location --request POST 'http://localhost:8080/load-users?file=%2Fapp%2Fdocs%2Fload.csv'
 ```
 #### Respuesta
 ```json
