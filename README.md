@@ -209,7 +209,7 @@ go test ./...
 
 ## Documentación OpenAPI/Swagger
 
-La documentación de la API está disponible en el endpoint `/swagger`.
+La documentación de la API está disponible en el endpoint `/docs`.
 
 ## Ejemplos de Consumo
 

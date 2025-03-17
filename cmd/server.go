@@ -22,11 +22,14 @@ func InitializeServer() (*http.ServeMux, error) {
 
 	// Serve swagger.yaml
 	mux.HandleFunc("/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "../docs/swagger.yaml")
+		w.Header().Set("Content-Type", "application/x-yaml")
+		http.ServeFile(w, r, "./docs/swagger.yaml")
 	})
 
 	// Serve Swagger UI
-	opts := middleware.SwaggerUIOpts{SpecURL: "/swagger.yaml"}
+	opts := middleware.SwaggerUIOpts{
+		SpecURL: "/swagger.yaml",
+	}
 	sh := middleware.SwaggerUI(opts, nil)
 	mux.Handle("/docs", sh)
 
